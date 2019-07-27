@@ -39,26 +39,30 @@ def login():
             continue
         else:
             flag = False
-            for line in open("accountfile.txt","r").readlines():
+            file_name = "accountfile.txt"
+            if not os.path.isfile(file_name):
+                fp=open(file_name, 'w+')
+                fp.close()
+
+
+            for line in open(file_name,"r").readlines():
                 login_info = line.split()
                 if username == login_info[0]:
                     flag = True
                     break
             if not flag:
-                print("Username doesn't exist...\nKindly Enter correct Username or create new\n")
-                continue
+                print("Username doesn't exist...\nKindly Enter correct Username or register\n")
+
+            while True and flag:
+                password = input("Enter Your Password: ")
+                if not len(password) > 0:
+                    print("Password can't be blank\n")
+                    continue
+                if loginauth(username, password):
+                    return session(username)
+                else:
+                    print("\nIncorrect credentials...\n")
             break
-
-    while True:
-        password = input("Enter Your Password: ")
-        if not len(password) > 0:
-            print("Password can't be blank\n")
-        break
-
-    if loginauth(username, password):
-        return session(username)
-    else:
-        print("\nIncorrect credentials...\n")
 
 
 
@@ -125,12 +129,6 @@ def session(username):
     '''
     print("You are now logged in...")
     print("Welcome to your account " + username)
-
-    if os.path.exists(username):
-        os.chdir(username)
-    else:
-        print("You haven't registered yet...")
-
     
     while True:
         print("\nChoose what do You want? \n1) View Old Journals(view) \n2) Create New One(create) \n3) Logout")
@@ -145,6 +143,7 @@ def session(username):
             break
         else:
             print(option + " is not a valid option...")
+    
 
 
 def create_journal(username):
@@ -156,7 +155,8 @@ def create_journal(username):
                    And adding .txt after username
      example - if username is dev then his journal file name will become dev.txt 
     '''
-    file_name = username+'.txt'
+    parent_dir = os.getcwd()+'/'+username+'/'
+    file_name = os.path.join(parent_dir, username+".txt")
     write_file(file_name)
     print('Journal successfully created...')
             
@@ -167,12 +167,13 @@ def write_file(file_name):
     *@ param(str) file_name - the file name we created in above function
     writing contents to the file when a user click to create
     '''
+
     with open(file_name, 'a+') as my_file:
         content = input('Write journal:> ')
 
         if len(content) > 0:
             date_time = datetime.datetime.now()
-            my_file.write(date_time.strftime("%d%b%y %I.%M%p"))
+            my_file.write(date_time.strftime("%d %b %y %I.%M%p"))
             my_file.write(' --> ')
             my_file.write(f'{content} \r')
             my_file.close()
@@ -185,7 +186,8 @@ def view_journal(username):
     '''
     retrieving journals written by corresponding user
     '''
-    file_name = username+'.txt'
+    parent_dir = os.getcwd()+'/'+username+'/'
+    file_name = os.path.join(parent_dir, username+".txt")
     print_journals(file_name)
 
 
@@ -204,7 +206,11 @@ def read_lines(file_name):
     checking if a single user has 50 records or more
     if more than 50 records then show
     '''
-    with open(file_name, 'a+') as my_file:
+    if not os.path.isfile(file_name):
+        open(file_name, 'w+')
+
+
+    with open(file_name, 'r') as my_file:
         lines = my_file.readlines()
         
         if(len(lines)>50):
@@ -245,4 +251,3 @@ while True:
 
 # close of application
 print("Application is Shutting down...")
-time.sleep(1)
